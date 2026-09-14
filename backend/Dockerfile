@@ -1,4 +1,4 @@
-FROM node:16-bullseye as build-deps
+FROM node:20-bullseye as build-deps
 
 # Debian Buster (base do node:14 original) foi arquivado; usamos bullseye.
 # O repositorio bullseye-security estava com indice desatualizado no edge do
