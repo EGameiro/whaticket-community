@@ -1,20 +1,24 @@
 FROM node:16-bullseye as build-deps
 
-RUN echo 'Acquire::Retries "8";' > /etc/apt/apt.conf.d/80-retries
+# Debian Buster (base do node:14 original) foi arquivado; usamos bullseye.
+# O repositorio bullseye-security estava com indice desatualizado no edge do
+# CDN (404 em gnupg deb11u3). Desabilitamos o security e usamos apenas main/
+# updates, cujas versoes existem de forma consistente no pool. Retries extra.
+RUN echo 'Acquire::Retries "8";' > /etc/apt/apt.conf.d/80-retries \
+    && sed -i '/security/d' /etc/apt/sources.list \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN rm -rf /var/lib/apt/lists/* && apt-get update && apt-get install -y wget
+RUN apt-get update && apt-get install -y wget
 
 ENV DOCKERIZE_VERSION v0.6.1
 RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
     && tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
     && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
 
-RUN rm -rf /var/lib/apt/lists/* \
-    && apt-get update \
+RUN apt-get update \
     && apt-get install -y wget gnupg \
     && wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
     && sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' \
-    && rm -rf /var/lib/apt/lists/* \
     && apt-get update \
     && apt-get install -y google-chrome-stable fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-kacst fonts-freefont-ttf libxss1 \
       --no-install-recommends \
